@@ -1,0 +1,128 @@
+---
+title: "BAYESIAN MODELING OF MICROBIOME DATA FOR DIFFERENTIAL ABUNDANCE ANALYSIS"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Tutorial
+
+The following script is used to perform differential abundance analysis for microbiome count data using the proposed ZINB-DPP model in the manuscript Q.Li _et al. 2019_ https://arxiv.org/abs/1902.08741.
+
+## Loading Data
+
+We first load a simulated $n$-by-$p$ micribiome count dataset. Here, we simulate $n = 24$ and $p = 1000$.
+
+```{r get_Y}
+Y = read.table("data/simulation_single.txt")
+Y = as.matrix(Y)
+n = nrow(Y); p = ncol(Y)
+```
+
+We also need the phenotype indicator vector of the $n$ samples. Each element in the indicator vector should be a binary variable with value of either $1$ or $0$.
+
+```{r get_z}
+group_info = rownames(Y)
+z_vector = substr(group_info, nchar(group_info), nchar(group_info))
+z_vector = as.numeric(z_vector) - 1
+```
+
+Before fitting the model, we get the true discriminating taxa by creating a binary vector `gamma_true`, where $1$ represents that the taxon is discriminating and $0$ otherwise.
+
+```{r get_true_gamma}
+gamma_true = rep(0, dim(Y)[2])
+gamma_true[grep(".TP", colnames(Y))] = 1
+```
+
+## Loading Main Function
+
+We load the main function of the ZINB-DPP model"
+
+```{r load_main_function,message=FALSE }
+library(Rcpp)
+sourceCpp('utility/core_zinb_x5.cpp')
+```
+
+We set all the model parameter by default and fit the model:
+
+```{r fit_zinbdpp}
+s_sizefactor = rep(1, n)
+Niter = 10000  
+S = matrix(1, 1, 1)
+G = matrix(1, 1, 1)
+b = 1
+h = 10
+
+# set a random seed #
+set.seed(198642)
+
+# run zinb-dpp model #
+zinbdpp_output = zinb_model_estimator(Y = Y, z = z_vector,
+s = s_sizefactor, iter = Niter, DPP = TRUE, b = b, h = h,S = S, G = G,store = TRUE, aggregate = FALSE, MRF = F)
+
+```
+
+## Evaludation 
+
+Now, we evaluate our model by visualizing the result of the differential abundance analysis.
+
+```{r viz_zinbdpp, echo = F,message=FALSE}
+source('utility/user_functions.R');
+library(ggplot2)
+library(cowplot)
+theme_set(theme_cowplot())
+
+s_true = read.table("data/true_size_factor.txt")
+s_true = as.vector(s_true)
+
+zinbdpp_PPI = zinbdpp_output$gamma_ppi
+c_gamma = BayFDR(PPI = zinbdpp_PPI, alpha = 0.05)
+ppi_df = data.frame(x = seq(1, length(zinbdpp_PPI)),
+                    y = zinbdpp_PPI)
+ppi_point_df = data.frame(x = which(gamma_true == 1),
+                          y = zinbdpp_PPI[which(gamma_true == 1)])
+ggplot(ppi_df, 
+       aes(x = x,xend = x, y = 0, yend = y) ) + 
+  geom_segment() +
+  geom_point(data = ppi_point_df, aes(x, y), color = 'red')+
+  geom_hline(yintercept = c_gamma, linetype = "dashed", color = 'red') + 
+  xlab("Feature index") + ylab("Marginal PPI")
+```
+
+
+Each vertial line is the posterior proability of inclusion (PPI) of a taxon. The dashed line represent the threshold that control the Bayesian false discovery rate to be less than $0.05$. Taxa whose PPIs exceed the dashed line would be selected as the differentially abundant taxa.
+
+Notice that the red dots are true discriminating taxa. According to the model fitting, we have 
+
+- Number of true positive = `r {sum(zinbdpp_PPI > c_gamma & gamma_true == 1)}`
+
+- Number of false positive = `r {sum(zinbdpp_PPI > c_gamma & gamma_true == 0)}`
+
+- Number of true negative = `r {sum(zinbdpp_PPI <= c_gamma & gamma_true == 0)}`
+
+- Number of false negative = `r {sum(zinbdpp_PPI <= c_gamma & gamma_true == 1)}`
+
+
+## Size Factor Estimation 
+
+We can also check the estimation of the size factors for all $n = 24$ samples in the data.
+
+```{r echo = F}
+s_mcmc = zinbdpp_output$s
+si_df_dpp = data.frame(st = s_true, 
+                       dpp = apply(s_mcmc, 2, mean),
+                       low = apply(s_mcmc, 2, quantile, 0.025),
+                       up = apply(s_mcmc, 2, quantile, 0.975))
+colnames(si_df_dpp)[1] = "st"
+
+ggplot(si_df_dpp, aes(st, dpp)) +
+  geom_errorbar(aes(ymin = low,ymax = up),width = 0.2)+
+  geom_point(colour = "black", size = 2.5, shape=1) +
+  ylim(0, 5)+xlim(0, 5)+xlab("True")+ylab("Estimated")+ggtitle("DPP") +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed")
+
+```
+
+In the figure above, each vertical bar is the $95\%$ credible interval estimation of the size factor, with the posterior mean in the middle.
