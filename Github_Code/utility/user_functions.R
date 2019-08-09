@@ -350,7 +350,7 @@ gamma.PPI.draw.pick = function(gamma.PPI, tax.name.full, pick.name, alpha.sig = 
                                 "family", "genus", "species"))
   
   cutoff.value = BayFDR(gamma.PPI, alpha.sig)
-  cut.below = gamma.PPI[gamma.PPI < cutoff.value]
+  cut.below = gamma.PPI[gamma.PPI == cutoff.value]
   cutoff.draw = max(cut.below) + 0.001
   ggplot() +
     geom_rect(data=rect.df,
