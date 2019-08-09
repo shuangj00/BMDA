@@ -9,7 +9,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Tutorial
 
-The following script is used to perform differential abundance analysis for microbiome count data using the proposed ZINB-DPP model in the manuscript Q.Li _et al. 2019_ https://arxiv.org/abs/1902.08741.
+The following script is used to perform differential abundance analysis for microbiome count data using the proposed Zero-inflated Negative Binomial model with Dirichlet Process Prior (ZINB-DPP) model in the manuscript Q.Li _et al. 2019_ https://arxiv.org/abs/1902.08741.
 
 ## Loading Data
 
@@ -21,7 +21,7 @@ Y = as.matrix(Y)
 n = nrow(Y); p = ncol(Y)
 ```
 
-We also need the phenotype indicator vector of the $n$ samples. Each element in the indicator vector should be a binary variable with value of either $1$ or $0$.
+We also need the phenotype indicator vector of the $n$ samples. Each element in the indicator vector is a binary variable with value of either $1$ or $0$. Here, we have 2 groups with a balanced group size of $12$.
 
 ```{r get_z}
 group_info = rownames(Y)
@@ -38,7 +38,7 @@ gamma_true[grep(".TP", colnames(Y))] = 1
 
 ## Loading Main Function
 
-We load the main function of the ZINB-DPP model"
+We load the main function of the ZINB-DPP model:
 
 ```{r load_main_function,message=FALSE }
 library(Rcpp)
@@ -47,7 +47,7 @@ sourceCpp('utility/core_zinb_x5.cpp')
 
 We set all the model parameter by default and fit the model:
 
-```{r fit_zinbdpp}
+```{r fit_zinbdpp, cache = TRUE}
 s_sizefactor = rep(1, n)
 Niter = 10000  
 S = matrix(1, 1, 1)
@@ -64,18 +64,20 @@ s = s_sizefactor, iter = Niter, DPP = TRUE, b = b, h = h,S = S, G = G,store = TR
 
 ```
 
-## Evaludation 
+## Evaluation
 
 Now, we evaluate our model by visualizing the result of the differential abundance analysis.
 
-```{r viz_zinbdpp, echo = F,message=FALSE}
-source('utility/user_functions.R');
+```{r load_lbr, include=FALSE, message=FALSE}
 library(ggplot2)
 library(cowplot)
 theme_set(theme_cowplot())
+```
 
-s_true = read.table("data/true_size_factor.txt")
-s_true = as.vector(s_true)
+```{r viz_zinbdpp, message=FALSE}
+# load function to calculate the threshold that 
+# controls the Bayesian false discovery rate 
+source('utility/user_functions.R');
 
 zinbdpp_PPI = zinbdpp_output$gamma_ppi
 c_gamma = BayFDR(PPI = zinbdpp_PPI, alpha = 0.05)
@@ -88,7 +90,7 @@ ggplot(ppi_df,
   geom_segment() +
   geom_point(data = ppi_point_df, aes(x, y), color = 'red')+
   geom_hline(yintercept = c_gamma, linetype = "dashed", color = 'red') + 
-  xlab("Feature index") + ylab("Marginal PPI")
+  xlab("Taxon index") + ylab("Posterior probability of inclusion")
 ```
 
 
@@ -109,7 +111,12 @@ Notice that the red dots are true discriminating taxa. According to the model fi
 
 We can also check the estimation of the size factors for all $n = 24$ samples in the data.
 
-```{r echo = F}
+```{r sf}
+# Load true size factors
+s_true = read.table("data/true_size_factor.txt")
+s_true = as.vector(s_true)
+
+# Load estimated size factors
 s_mcmc = zinbdpp_output$s
 si_df_dpp = data.frame(st = s_true, 
                        dpp = apply(s_mcmc, 2, mean),
@@ -117,6 +124,7 @@ si_df_dpp = data.frame(st = s_true,
                        up = apply(s_mcmc, 2, quantile, 0.975))
 colnames(si_df_dpp)[1] = "st"
 
+# Compare true and estimated size factors
 ggplot(si_df_dpp, aes(st, dpp)) +
   geom_errorbar(aes(ymin = low,ymax = up),width = 0.2)+
   geom_point(colour = "black", size = 2.5, shape=1) +
@@ -125,4 +133,11 @@ ggplot(si_df_dpp, aes(st, dpp)) +
 
 ```
 
-In the figure above, each vertical bar is the $95\%$ credible interval estimation of the size factor, with the posterior mean in the middle.
+In the figure above, each vertical bar is a $95\%$ credible interval estimation of the corresponding size factor, with the posterior mean in the middle.
+
+## Result Reproduce
+Please refer to R code `demo_code.R` to reproduce all the above results.
+
+## Contact 
+
+Qiwei Li, Department of Mathematical Science, The University of Texas at Dallas, Richardson, Texas <liqiwei2000@gmail.com>
