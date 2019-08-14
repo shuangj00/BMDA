@@ -1,5 +1,4 @@
 # code for reproducing the results for the CRC study
-setwd("~/Google Drive/microbiom project/jasa_cs_update/jasa_submission/Code/fig_table_reproduce")
 
 # ========================================================================================
 # ========================================================================================
@@ -7,7 +6,7 @@ setwd("~/Google Drive/microbiom project/jasa_cs_update/jasa_submission/Code/fig_
 # ========================================================================================
 # ========================================================================================
 require(Rcpp);
-source('user_functions.R');
+source('utility/user_functions.R');
 
 # ========================================================================================
 # ========================================================================================
@@ -16,11 +15,11 @@ source('user_functions.R');
 # ========================================================================================
 
 # count matrix #
-Y = read.table("data/Zeller_countmatrix.txt")
+Y = read.table("Zeller_countmatrix.txt")
 Y = as.matrix(Y)
 n = dim(Y)[1]; p = dim(Y)[2]
 # phylogenetic tree structure #
-S = read.table("data/Zeller_phylogenetic_tree.txt", row.names = 1)
+S = read.table("Zeller_phylogenetic_tree.txt", row.names = 1)
 S = as.matrix(S)
 # group index 
 group_info = rownames(Y)

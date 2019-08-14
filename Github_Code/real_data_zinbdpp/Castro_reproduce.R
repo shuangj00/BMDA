@@ -1,5 +1,4 @@
 # code for reproducing the results for the CRC study
-setwd("~/Google Drive/microbiom project/jasa_cs_update/jasa_submission/Code/fig_table_reproduce")
 
 # ========================================================================================
 # ========================================================================================
@@ -16,11 +15,11 @@ source('utility/user_functions.R');
 # ========================================================================================
 
 # count matrix #
-Y = read.table("data/Castro_countmatrix.txt")
+Y = read.table("Castro_countmatrix.txt")
 Y = as.matrix(Y)
 n = dim(Y)[1]; p = dim(Y)[2]
 # phylogenetic tree structure #
-S = read.table("data/Castro_phylogenetic_tree.txt", row.names = 1)
+S = read.table("Castro_phylogenetic_tree.txt", row.names = 1)
 S = as.matrix(S)
 # group index 
 group_info = rownames(Y)
