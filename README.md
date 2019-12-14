@@ -1,6 +1,6 @@
 # Zero-inflated negative binomial model with dirichlet process prior (ZINB-DPP) for the differential abundance analysis of microbiome count data
 
-This is the Github page for the code used in manuscriot Q. Li *et al 2019* https://arxiv.org/abs/1902.08741. to fit the Zero-inflated Negative Binomial model with Dirichlet Process Prior (ZINB-DPP) model for the differential abundance analysis of microbiome count data.
+This is the Github page for the code used in manuscript Q. Li *et al 2019* https://arxiv.org/abs/1902.08741. to fit the Zero-inflated Negative Binomial model with Dirichlet Process Prior (ZINB-DPP) model for the differential abundance analysis of microbiome count data.
 
 ## Tutorial
 
