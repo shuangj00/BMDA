@@ -251,7 +251,43 @@ log_dist_compare = function(taxa.plot, HH = Hmat, AA = Amat_est, z_v = z_v){
 }
 
 
+# =============================================================================================
+# The function to generate the adjacent matrix based on the taxonomic tree structure
+# ---------------------------------------------------------------------------------------------
+# Input:  Y: the sample-by-taxon count matrix for the bottom-level (e.g., species level) taxa
+#         S: the taxonomic tree information matrix (each row is a higher-level taxon, and the
+#            entry is the corresponding column index of lower level taxa)
+# ---------------------------------------------------------------------------------------------
+# Output: a large adjacent matrix representing the taxanomic tree
+#         
+# =============================================================================================
 
+S2adj = function(Y, S) {
+  taxa_names <- c(colnames(Y), rownames(S));
+  levels <- c("k", "p", "c", "o", "f", "g", "s");
+  p <- length(taxa_names);
+  adj <- matrix(0, nrow = p, ncol = p);
+  colnames(adj) <- taxa_names;
+  rownames(adj) <- taxa_names;
+  SS <- cbind(S, rep(0, dim(S)[1]));
+  SS <- rbind(cbind(1:dim(Y)[2], matrix(0, nrow = dim(Y)[2], ncol = dim(SS)[2] - 1)), SS);
+  rownames(SS) <- taxa_names;
+  for (i in 1:(p - 1)) {
+    for (j in (i + 1):p) {
+      level_i <- which(levels == substr(taxa_names[i], 1, 1));
+      level_j <- which(levels == substr(taxa_names[j], 1, 1));
+      if (abs(level_i - level_j) == 1) {
+        taxa_i <- unique(SS[taxa_names[i],]);
+        taxa_j <- unique(SS[taxa_names[j],]);
+        if (length(intersect(taxa_i, taxa_j)) == length(taxa_i) || length(intersect(taxa_i, taxa_j)) == length(taxa_j)) {
+          adj[i, j] <- 1;
+          adj[j, i] <- 1;
+        }
+      }
+    }
+  }
+  return(adj);
+}
 
 # =============================================================================================
 # The function of generating the cladogram to visualize the selected taxa on the phylogenetic tree
@@ -265,7 +301,8 @@ log_dist_compare = function(taxa.plot, HH = Hmat, AA = Amat_est, z_v = z_v){
 #         
 # =============================================================================================
 
-tree.check = function(controln, casen, hl_size = 4, line_wd = 0.5){
+tree.check = function(controln, casen, hl_size = 4, 
+                      line_wd = 0.5){
   library(cowplot)
   library(ggpubr)
   library(ggtree)
@@ -395,13 +432,11 @@ gamma.PPI.draw.pick = function(gamma.PPI, tax.name.full, pick.name, alpha.sig = 
 CIalpha.ggplot = function(PPI, tax.name.full, alpha.mat, alpha.sig = 0.05, 
                           inputname.1 = "Control", inputname.2 = "Case", shift_right = 5.5,
                           shift_ang = 30, size_y = 1, taxa.font = 1.5){
-  require(ggplot2)
-  require(cowplot)
-  theme_set(theme_cowplot())
   cutoff = BayFDR(PPI, alpha.sig)
   taxon.sel = which(PPI > cutoff)
   taxon_name = tax.name.full[taxon.sel]
   alpha.sele = alpha.mat[,taxon.sel ]
+  alpha.sele = as.matrix(alpha.sele)
   taxon.plot.df = data.frame(taxon_name = taxon_name,
                              taxon_mean = apply(alpha.sele, 2,mean),
                              taxon_ql = apply(alpha.sele, 2, quantile,probs = 0.025),
@@ -411,30 +446,56 @@ CIalpha.ggplot = function(PPI, tax.name.full, alpha.mat, alpha.sig = 0.05,
   pos.count = sum(plot.df$taxon_mean > 0)
   neg.count = sum(plot.df$taxon_mean < 0)
   plot.df$sign = c(rep("pos", pos.count),  rep("neg", neg.count))
-  ggplot() + 
-    geom_errorbarh(data=plot.df, 
-                   aes(y=taxon_name, x=taxon_mean, xmin=taxon_ql, xmax=taxon_qu, color = sign), 
-                   height=0.2, size=1) +
-    geom_point(data=plot.df, aes(y=taxon_name, x=taxon_mean), size=2, shape=21, fill = 'white') +
-    scale_y_discrete(limits = rev(levels(plot.df$taxon_name))) +
-    geom_vline(xintercept=0, linetype="dotted") +
-    theme(
-      plot.margin=unit(c(5.5, 5.5, 5.5, shift_right), "points"),
-      panel.grid.major.x = element_blank(),
-      axis.text.x = element_text(angle = shift_ang, hjust = 1, size = rel(taxa.font)),
-      axis.text.y = element_text(size = rel(1.3)),
-      axis.title.y = element_text(size = rel(size_y)),
-      legend.title=element_text(size=rel(1.5)),
-      legend.text=element_text(size=rel(1.5))
-    ) +
-    guides(fill=FALSE) +
-    labs(x = expression(paste("Effect size in log scale log(", alpha[j*1], "/", alpha[j*0], ")")),
-         y = "Identified Taxa", color = "Enriched Group\n") +
-    scale_color_manual(labels = c(paste0("Taxa enriched in ", inputname.1, " group"),  paste0("Taxa enriched in ", inputname.2, " group")), 
-                       values = c("maroon3", "royalblue2"))+
-    coord_flip()
+  if(length(unique(plot.df$sign)) !=1 ){
+    ggplot(data=plot.df, aes(y=taxon_name, x=taxon_mean, xmin=taxon_ql, xmax=taxon_qu, color = sign)) + 
+      geom_errorbarh(height=0.2, size=1) +
+      geom_point(data=plot.df,aes(y=taxon_name, x=taxon_mean), size=2, shape=21, fill = 'white') +
+      scale_y_discrete(limits = rev(levels(plot.df$taxon_name))) +
+      geom_vline(xintercept=0, linetype="dotted") +
+      theme(
+        plot.margin=unit(c(5.5, 5.5, 5.5, shift_right), "points"),
+        panel.grid.major.x = element_blank(),
+        axis.text.x = element_text(angle = shift_ang,face = "italic", hjust = 1, size = rel(taxa.font)),
+        axis.text.y = element_text(size = rel(1.3)),
+        axis.title.y = element_text(size = rel(size_y)),
+        legend.title=element_text(size=rel(1.5)),
+        legend.text=element_text(size=rel(1.5))
+      ) +
+      guides(fill=FALSE) +
+      labs(x = expression(paste("Posterior effect size log(", alpha[j*2], "/", alpha[j*1], "|.)")),
+           y = " ", color = " ") +
+      scale_color_manual(labels = c(paste0("Taxa enriched in \n ", inputname.1, " group"), 
+                                    paste0("Taxa enriched in \n", inputname.2, " group")), 
+                         values = c("maroon3", "royalblue2"))+
+      coord_flip()
+  }else{
+    col.idx = ifelse(unique(plot.df$sign) == "neg","maroon3", "royalblue2" )
+    plt.label = ifelse(unique(plot.df$sign) == "neg", 
+                       paste0("Taxa enriched in \n ", inputname.1, " group"), 
+                       paste0("Taxa enriched in \n", inputname.2, " group"))
+    ggplot(data=plot.df, aes(y=taxon_name, x=taxon_mean, xmin=taxon_ql, xmax=taxon_qu, color = sign)) + 
+      geom_errorbarh(height=0.2, size=1) +
+      geom_point(data=plot.df,aes(y=taxon_name, x=taxon_mean), size=2, shape=21, fill = 'white') +
+      scale_y_discrete(limits = rev(levels(plot.df$taxon_name))) +
+      geom_vline(xintercept=0, linetype="dotted") +
+      theme(
+        plot.margin=unit(c(5.5, 5.5, 5.5, shift_right), "points"),
+        panel.grid.major.x = element_blank(),
+        axis.text.x = element_text(angle = shift_ang,face = "italic", hjust = 1, size = rel(taxa.font)),
+        axis.text.y = element_text(size = rel(1.3)),
+        axis.title.y = element_text(size = rel(size_y)),
+        legend.title=element_text(size=rel(1.5)),
+        legend.text=element_text(size=rel(1.5))
+      ) +
+      guides(fill=FALSE) +
+      labs(x = expression(paste("Posterior effect size log(", alpha[j*2], "/", alpha[j*1], "|.)")),
+           y = " ", color = " ") +
+      scale_color_manual(labels = plt.label, 
+                         values = col.idx)+
+      coord_flip()
+  }
+  
 }
-
 
 # =============================================================================================
 # The function of generating the cladogram to highlight the selected taxa on the phylogenetic tree

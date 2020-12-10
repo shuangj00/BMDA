@@ -1,0 +1,9 @@
+base
+cowplot
+ggplot2
+ggpubr
+ggtree
+data.tree
+microbiomeViz
+phyloseq
+Rcpp

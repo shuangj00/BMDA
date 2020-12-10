@@ -10,11 +10,9 @@ static double exp_rs(double a, double b);
 static double rnorm_trunc(double mu, double sigma, double lower, double upper);
 
 // [[Rcpp::export]]
-Rcpp::List zinb_model_estimator(IntegerMatrix Y, IntegerVector z, NumericVector s, 
-                                int iter, bool DPP, IntegerMatrix S, 
-                                bool aggregate, bool store, double b, double h, 
-                                bool MRF, IntegerMatrix G,
-                                double phi_low = 1, int count_th = 2, double ff_ini = 0.5) {
+Rcpp::List zinb_model_estimator(IntegerMatrix Y, IntegerVector z, NumericVector s, int iter, 
+                                bool DPP, IntegerMatrix S, bool aggregate, bool store, double b, double h, 
+                                bool MRF, IntegerMatrix G, double f_val, double d_val, double phi_low = 1, int count_minimum = 3) {
   // Read data dimensionality
   int n = Y.nrow();
   int p = Y.ncol();
@@ -67,8 +65,8 @@ Rcpp::List zinb_model_estimator(IntegerMatrix Y, IntegerVector z, NumericVector 
   double b_phi = 0.001; 
   double a_omega = 1.0;
   double b_omega = 1.0;
-  double dd = -2.2;
-  double ff = ff_ini;
+  double dd = d_val;
+  double ff = f_val;
   
   
   double a_0 = 2.0;
@@ -146,7 +144,7 @@ Rcpp::List zinb_model_estimator(IntegerMatrix Y, IntegerVector z, NumericVector 
           count_2++;
         }
       }
-      if(count_2 < count_th)
+      if(count_2 < count_minimum)
       {
         flag(j) = 1;
         break;
@@ -359,127 +357,130 @@ Rcpp::List zinb_model_estimator(IntegerMatrix Y, IntegerVector z, NumericVector 
     }
     
     // Update gamma
-    for(e = 0; e < E; e++)
+    if (K > 1)
     {
-      j = rand()%p;
-      if(flag(j) == 0)
+      for(e = 0; e < E; e++)
       {
-        gamma_temp = 1 - gamma(j);
-        if(gamma_temp == 0) // Delete
+        j = rand()%p;
+        if(flag(j) == 0)
         {
-          if(MRF)
+          gamma_temp = 1 - gamma(j);
+          if(gamma_temp == 0) // Delete
           {
-            hastings = -dd;
-            for(jj = 0; jj < p; jj++)
+            if(MRF)
             {
-              if(G(j, jj) == 1)
+              hastings = -dd;
+              for(jj = 0; jj < p; jj++)
               {
-                hastings = hastings - ff;
+                if(G(j, jj) == 1  && gamma(jj) == 1)
+                {
+                  hastings = hastings - ff;
+                }
               }
             }
-          }
-          else 
-          {
-            hastings = log(b_omega) - log(a_omega);
-          }
-          temp = 0;
-          temp_2 = 0;
-          count_temp = 0;
-          for(ii = 0; ii < n; ii++)
-          {
-            if(H(ii, j) == 0)
+            else 
             {
-              temp = temp + log(A(ii, j))*log(A(ii, j));
-              temp_2 = temp_2 + log(A(ii, j));
-              count_temp++;
+              hastings = log(b_omega) - log(a_omega);
             }
-          }
-          temp = temp - temp_2*temp_2/(count_temp + 1/h_0);
-          //hastings = hastings + (-log(count_temp*h_0 + 1)*0.5 + lgamma(a_0 + count_temp*0.5) - lgamma(a_0) + a_0*log(b_0(j)) - (a_0 + count_temp*0.5)*log(b_0(j) + temp*0.5));
-          hastings = hastings + (-log(count_temp*h_0 + 1)*0.5 + lgamma(a_0 + count_temp*0.5) - lgamma(a_0) + a_0*log(b_0) - (a_0 + count_temp*0.5)*log(b_0 + temp*0.5));
-          for(k = 0; k < K; k++)
-          {
             temp = 0;
             temp_2 = 0;
             count_temp = 0;
             for(ii = 0; ii < n; ii++)
             {
-              if(z(ii) == k && H(ii, j) == 0)
+              if(H(ii, j) == 0)
               {
                 temp = temp + log(A(ii, j))*log(A(ii, j));
                 temp_2 = temp_2 + log(A(ii, j));
                 count_temp++;
               }
             }
-            temp = temp - temp_2*temp_2/(count_temp + 1/h);
-            //hastings = hastings - (-log(count_temp*h + 1)*0.5 + lgamma(a + count_temp*0.5) - lgamma(a) + a*log(b(k, j)) - (a + count_temp*0.5)*log(b(k, j) + temp*0.5));
-            hastings = hastings - (-log(count_temp*h + 1)*0.5 + lgamma(a + count_temp*0.5) - lgamma(a) + a*log(b) - (a + count_temp*0.5)*log(b + temp*0.5));
-          }
-        }
-        else // Add
-        {
-          if(MRF)
-          {
-            hastings = dd;
-            for(jj = 0; jj < p; jj++)
+            temp = temp - temp_2*temp_2/(count_temp + 1/h_0);
+            //hastings = hastings + (-log(count_temp*h_0 + 1)*0.5 + lgamma(a_0 + count_temp*0.5) - lgamma(a_0) + a_0*log(b_0(j)) - (a_0 + count_temp*0.5)*log(b_0(j) + temp*0.5));
+            hastings = hastings + (-log(count_temp*h_0 + 1)*0.5 + lgamma(a_0 + count_temp*0.5) - lgamma(a_0) + a_0*log(b_0) - (a_0 + count_temp*0.5)*log(b_0 + temp*0.5));
+            for(k = 0; k < K; k++)
             {
-              if(G(j, jj) == 1)
+              temp = 0;
+              temp_2 = 0;
+              count_temp = 0;
+              for(ii = 0; ii < n; ii++)
               {
-                hastings = hastings + ff;
+                if(z(ii) == k && H(ii, j) == 0)
+                {
+                  temp = temp + log(A(ii, j))*log(A(ii, j));
+                  temp_2 = temp_2 + log(A(ii, j));
+                  count_temp++;
+                }
               }
+              temp = temp - temp_2*temp_2/(count_temp + 1/h);
+              //hastings = hastings - (-log(count_temp*h + 1)*0.5 + lgamma(a + count_temp*0.5) - lgamma(a) + a*log(b(k, j)) - (a + count_temp*0.5)*log(b(k, j) + temp*0.5));
+              hastings = hastings - (-log(count_temp*h + 1)*0.5 + lgamma(a + count_temp*0.5) - lgamma(a) + a*log(b) - (a + count_temp*0.5)*log(b + temp*0.5));
             }
           }
-          else 
+          else // Add
           {
-            hastings = log(a_omega) - log(b_omega);
-          }
-          for(k = 0; k < K; k++)
-          {
+            if(MRF)
+            {
+              hastings = dd;
+              for(jj = 0; jj < p; jj++)
+              {
+                if(G(j, jj) == 1 && gamma(jj) == 1)
+                {
+                  hastings = hastings + ff;
+                }
+              }
+            }
+            else 
+            {
+              hastings = log(a_omega) - log(b_omega);
+            }
+            for(k = 0; k < K; k++)
+            {
+              temp = 0;
+              temp_2 = 0;
+              count_temp = 0;
+              for(ii = 0; ii < n; ii++)
+              {
+                if(z(ii) == k && H(ii, j) == 0)
+                {
+                  temp = temp + log(A(ii, j))*log(A(ii, j));
+                  temp_2 = temp_2 + log(A(ii, j));
+                  count_temp++;
+                }
+              }
+              temp = temp - temp_2*temp_2/(count_temp + 1/h);
+              //hastings = hastings + (-log(count_temp*h + 1)*0.5 + lgamma(a + count_temp*0.5) - lgamma(a) + a*log(b(k, j)) - (a + count_temp*0.5)*log(b(k, j) + temp*0.5));
+              hastings = hastings + (-log(count_temp*h + 1)*0.5 + lgamma(a + count_temp*0.5) - lgamma(a) + a*log(b) - (a + count_temp*0.5)*log(b + temp*0.5));
+            }
             temp = 0;
             temp_2 = 0;
             count_temp = 0;
             for(ii = 0; ii < n; ii++)
             {
-              if(z(ii) == k && H(ii, j) == 0)
+              if(H(ii, j) == 0)
               {
                 temp = temp + log(A(ii, j))*log(A(ii, j));
                 temp_2 = temp_2 + log(A(ii, j));
                 count_temp++;
               }
             }
-            temp = temp - temp_2*temp_2/(count_temp + 1/h);
-            //hastings = hastings + (-log(count_temp*h + 1)*0.5 + lgamma(a + count_temp*0.5) - lgamma(a) + a*log(b(k, j)) - (a + count_temp*0.5)*log(b(k, j) + temp*0.5));
-            hastings = hastings + (-log(count_temp*h + 1)*0.5 + lgamma(a + count_temp*0.5) - lgamma(a) + a*log(b) - (a + count_temp*0.5)*log(b + temp*0.5));
+            temp = temp - temp_2*temp_2/(count_temp + 1/h_0);
+            //hastings = hastings - (-log(count_temp*h_0 + 1)*0.5 + lgamma(a_0 + count_temp*0.5) - lgamma(a_0) + a_0*log(b_0(j)) - (a_0 + count_temp*0.5)*log(b_0(j) + temp*0.5));
+            hastings = hastings - (-log(count_temp*h_0 + 1)*0.5 + lgamma(a_0 + count_temp*0.5) - lgamma(a_0) + a_0*log(b_0) - (a_0 + count_temp*0.5)*log(b_0 + temp*0.5));
           }
-          temp = 0;
-          temp_2 = 0;
-          count_temp = 0;
-          for(ii = 0; ii < n; ii++)
+          if (hastings >= log(double(rand()%10001)/10000))
           {
-            if(H(ii, j) == 0)
+            gamma(j) = gamma_temp;
+            if(gamma_temp == 1) // Add
             {
-              temp = temp + log(A(ii, j))*log(A(ii, j));
-              temp_2 = temp_2 + log(A(ii, j));
-              count_temp++;
+              gamma_sum++;
             }
-          }
-          temp = temp - temp_2*temp_2/(count_temp + 1/h_0);
-          //hastings = hastings - (-log(count_temp*h_0 + 1)*0.5 + lgamma(a_0 + count_temp*0.5) - lgamma(a_0) + a_0*log(b_0(j)) - (a_0 + count_temp*0.5)*log(b_0(j) + temp*0.5));
-          hastings = hastings - (-log(count_temp*h_0 + 1)*0.5 + lgamma(a_0 + count_temp*0.5) - lgamma(a_0) + a_0*log(b_0) - (a_0 + count_temp*0.5)*log(b_0 + temp*0.5));
-        }
-        if (hastings >= log(double(rand()%10001)/10000))
-        {
-          gamma(j) = gamma_temp;
-          if(gamma_temp == 1) // Add
-          {
-            gamma_sum++;
-          }
-          else // Delete
-          {
-            gamma_sum--;
-          }
-          if(it > burn) {
-            accept_gamma++;
+            else // Delete
+            {
+              gamma_sum--;
+            }
+            if(it > burn) {
+              accept_gamma++;
+            }
           }
         }
       }
