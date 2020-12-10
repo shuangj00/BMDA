@@ -18,6 +18,7 @@ data normalization in the manuscript Q.Li *et al. 2019*
       - [Count simulation](#count-simulation)
   - [Model Fitting](#model-fitting)
   - [Evaluation](#evaluation)
+  - \[Citation\]
   - [Contact](#contact)
 
 ## Data Generation
@@ -182,6 +183,12 @@ model fitting, we have
   - Number of true negative = 251
 
   - Number of false negative = 2
+
+## Ciatation
+
+Qiwei Li, Shuang Jiang, Guanghua Xiao, Andrew Y. Koh, Xiaowei Zhan
+(2019), Bayesian Modeling of Microbiome Data for Differential Abundance
+Analysis, arXiv:1902.08741.
 
 ## Contact
 
