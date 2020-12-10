@@ -68,7 +68,7 @@ tree.check(controln = da_taxa_mild[direction_t == -1],
            hl_size = 2)
 ```
 
-![](readme_files/figure-gfm/load_data-1.png)<!-- -->
+![](readme/readme_files/figure-gfm/load_data-1.png)<!-- -->
 
 Here, the two different colors used for the discriminating species
 indicate the enrichment direction. The pink dots are species that are
@@ -166,7 +166,7 @@ abline(h = cut_off, col = 'red',lty = 2)
 points(x = DA_true , y = DA_gamma, pch = 16, col = 'red')
 ```
 
-![](readme_files/figure-gfm/eval_model-1.png)<!-- --> Each vertial line
+![](readme/readme_files/figure-gfm/eval_model-1.png)<!-- --> Each vertial line
 is the posterior proability of inclusion (PPI) of a species. The dashed
 line represents the threshold that controls the Bayesian false discovery
 rate to be less than ![0.05](https://latex.codecogs.com/png.latex?0.05
