@@ -134,7 +134,7 @@ Notice that the red dots are true discriminating taxa. According to the model fi
 
 - Number of false negative = `r {sum(gamma_bottom <= cut_off & gamma_true == 1)}`
 
-## Ciatation
+## Citation
 
 Qiwei Li, Shuang Jiang, Guanghua Xiao, Andrew Y. Koh, Xiaowei Zhan (2019), Bayesian Modeling of Microbiome Data for Differential Abundance Analysis, arXiv:1902.08741.
 
