@@ -192,5 +192,5 @@ Analysis, arXiv:1902.08741.
 
 ## Contact
 
-Qiwei Li, Department of Mathematical Science, The University of Texas at
+Qiwei Li, Department of Mathematical Sciences, The University of Texas at
 Dallas, Richardson, Texas <liqiwei2000@gmail.com>
