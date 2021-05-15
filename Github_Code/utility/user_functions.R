@@ -1,3 +1,4 @@
+# function of calculating the cut-off value for FDR control
 BayFDR <- function(PPI, alpha){
   PPI_sorted = sort(PPI,decreasing = TRUE)
   k = 1
