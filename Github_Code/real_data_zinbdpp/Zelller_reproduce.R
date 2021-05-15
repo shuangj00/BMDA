@@ -56,13 +56,19 @@ h = 50;
 gamma_ppi_list = list()
 flag_record = c()
 for(cc in 1:4){
-  zinbdpp_output = zinb_model_estimator(Y = Y, z = z_vector, s = s_ini,  
-                                        iter = iter, DPP = TRUE,
+  zinbdpp_output = zinb_model_estimator(Y = Y, z = z_vector, 
+                                        s = s_ini,  
+                                        iter = iter, 
+                                        DPP = TRUE,
                                         S = S, b = b, h = h,
-                                        aggregate  = TRUE, store = TRUE, 
-                                        MRF = TRUE,G = G_mat, 
-                                        f_val = 0.5, d_val = -2.2)
+                                        aggregate  = TRUE, 
+                                        store = TRUE, 
+                                        MRF = TRUE,
+                                        G = G_mat, 
+                                        f_val = 0.5, 
+                                        d_val = -2.2)
   gamma_ppi_list[[cc]] = zinbdpp_output$gamma_ppi
+  # save the index for quality control
   if(cc == 1){
     flag_record = zinbdpp_output$flag
   }
