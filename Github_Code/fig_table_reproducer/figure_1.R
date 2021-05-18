@@ -9,7 +9,7 @@ require(ggplot2);
 require(cowplot);
 theme_set(theme_cowplot())
 source('utility/user_functions.R');
-load("data/Zeller_reporduce.Rdata")
+load("data/Zeller_summary.Rdata")
 
 
 # ========================================================================================
@@ -51,8 +51,8 @@ plot(PPI_res)
 taxa.all = taxa.output.name
 taxa.sig = taxa.all[PPI_keep > c_gamma]
 
-taxa.sig.control = taxa.sig[c( 2, 7, 18, 21 )]
-taxa.sig.case = taxa.sig[-c(2, 7, 18, 21)]
+taxa.sig.control = taxa.sig[c( 2, 7, 17, 21 )]
+taxa.sig.case = taxa.sig[-c(2, 7, 17, 21)]
 
 tree.check(controln = taxa.sig.control, casen = taxa.sig.case, hl_size = 2)
 

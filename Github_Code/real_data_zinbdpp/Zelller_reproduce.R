@@ -18,10 +18,10 @@ source('utility/user_functions.R');
 Y = read.table("Zeller_countmatrix.txt")
 Y = as.matrix(Y)
 n = dim(Y)[1]; p = dim(Y)[2]
-# taxonomic tree structure #
+# orginal taxonomic tree structure #
 S = read.table("Zeller_phylogenetic_tree.txt", row.names = 1)
 S = as.matrix(S)
-# get the adjacent matrix for the taxonomic tree #
+# get the binary adjacent matrix for the taxonomic tree #
 G_mat = S2adj(Y, S)
 # group index 
 group_info = rownames(Y)

@@ -9,7 +9,7 @@ require(ggplot2);
 require(cowplot);
 theme_set(theme_cowplot())
 source('utility/user_functions.R');
-load("data/Zeller_reporduce.Rdata")
+load("data/Zeller_summary.Rdata")
 
 
 # ========================================================================================
