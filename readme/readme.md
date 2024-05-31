@@ -1,7 +1,7 @@
 
+# BMDA
 
-
-# Bayesian Modeling of Metagenomic Sequencing Data for Discovering Microbial Biomarkers in Colorectal Cancer Detection
+## Bayesian Modeling of Metagenomic Sequencing Data for Discovering Microbial Biomarkers in Colorectal Cancer Detection
 
 ## Introduction
 
