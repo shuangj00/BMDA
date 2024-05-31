@@ -1,4 +1,5 @@
 # ***README***
+# BMDA
 # The following script is used to fit the zero-inflated negative binomial model with Dirichlet process prior
 # proposed in the submitted manuscript titled "Bayesian Modeling of Microbiome Data for Differential Abundance
 # Analysis".
