@@ -19,7 +19,7 @@ Y = read.table("Zeller_countmatrix.txt")
 Y = as.matrix(Y)
 n = dim(Y)[1]; p = dim(Y)[2]
 # orginal taxonomic tree structure #
-S = read.table("Zeller_phylogenetic_tree.txt", row.names = 1)
+S = read.table("Zeller_taxonomic_tree.txt", row.names = 1)
 S = as.matrix(S)
 # get the binary adjacent matrix for the taxonomic tree #
 G_mat = S2adj(Y, S)
