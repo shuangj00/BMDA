@@ -19,7 +19,7 @@ Y = read.table("Castro_countmatrix.txt")
 Y = as.matrix(Y)
 n = dim(Y)[1]; p = dim(Y)[2]
 # phylogenetic tree structure #
-S = read.table("Castro_phylogenetic_tree.txt", row.names = 1)
+S = read.table("Castro_taxonomic_tree.txt", row.names = 1)
 S = as.matrix(S)
 # group index 
 group_info = rownames(Y)
