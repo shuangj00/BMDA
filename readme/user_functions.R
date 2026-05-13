@@ -9,7 +9,7 @@ BayFDR <- function(PPI, alpha){
   return(PPI_sorted[k])
 }
 
-# =============================================================================================
+# ============================================================================================
 # The function of estimating size factors from count data
 # ---------------------------------------------------------------------------------------------
 # Input:  Y, a n-by-p count matrix, where n is the number of samples and p is the number of 
