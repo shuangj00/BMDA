@@ -183,11 +183,6 @@ model fitting, we have
 
   - Number of false negative = 2
 
-## Citation
-
-Qiwei Li, Shuang Jiang, Guanghua Xiao, Andrew Y. Koh, Xiaowei Zhan
-(2019), Bayesian Modeling of Microbiome Data for Differential Abundance
-Analysis, arXiv:1902.08741.
 
 ## Contact
 
