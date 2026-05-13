@@ -8,8 +8,7 @@
 The following script is a tutorial for performing differential abundance
 analysis for microbiome count data using the proposed Zero-inflated
 Negative Binomial model with the Dirichlet Process Prior (ZINB-DPP) for
-data normalization in the manuscript Q.Li *et al. 2019*
-<https://arxiv.org/abs/1902.08741>.
+data normalization.
 
 ## Contents
 
